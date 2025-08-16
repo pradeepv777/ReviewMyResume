@@ -1,4 +1,5 @@
-# AI Resume Reviewer (Streamlit)
+# ReviewMyResume (Streamlit)
+# A Resume review website
 
 A clean Streamlit port of your resume reviewer. Upload a PDF, get a 100-point score, category breakdown, tier (S–D), and prioritized feedback.
 
