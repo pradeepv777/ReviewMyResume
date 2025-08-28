@@ -1,0 +1,11 @@
+resume_reviewer_streamlit/
+├── static/
+│   ├── Resume_Pic.jpg
+│   └── styles.css
+├── .gitignore
+├── parser.py
+├── README.md
+├── requirements.txt
+├── results.py
+├── scoring.py
+└── streamlit_app.py
