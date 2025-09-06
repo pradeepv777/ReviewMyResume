@@ -132,6 +132,7 @@ html, body, .stApp {
 }
 .step h3 {
     margin-bottom: 0.5rem;
+    color: black !important;
 }
 .step p {
     margin-top: 0;
