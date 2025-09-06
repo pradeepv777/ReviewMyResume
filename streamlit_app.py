@@ -7,7 +7,7 @@ import time
 
 st.set_page_config(page_title="Review My Resume", layout="wide")
 
-# Load CSS
+# Load the styles.css  file
 def load_css(file_name):
     try:
         with open(file_name) as f:
@@ -17,7 +17,6 @@ def load_css(file_name):
 
 load_css("static/styles.css")
 
-# Fix for white bar issue
 st.markdown("""
 <style>
 .upload-card {
@@ -54,7 +53,7 @@ if st.session_state.page == "home":
     left, right = st.columns([1, 1])
     with left:
         st.markdown("<h1 style='font-size: 2.8rem; font-weight: bold;'>Is your resume good enough?</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 1.2rem; line-height: 1.6;'>A free and fast AI resume checker doing crucial checks to ensure your resume is ready to perform and get you interview callbacks.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 1.2rem; line-height: 1.6;'>A free and fast resume reviewer to check and ensure your resume is ready for the job market.</p>", unsafe_allow_html=True)
 
         st.markdown('<div class="upload-card">', unsafe_allow_html=True)
         st.markdown("### Upload Your Resume")
@@ -93,7 +92,7 @@ if st.session_state.page == "home":
                 parsed_data = parse_resume(str(temp_path))
                 final_score, feedback, breakdown = score_resume(parsed_data)
 
-                # ✅ Calculate tier cleanly from score (not from feedback)
+                # ✅ Calculate the tier of resume
                 if final_score >= 85:
                     tier = "A"
                 elif final_score >= 70:
@@ -155,4 +154,4 @@ elif st.session_state.page == "results":
         st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer">Review My Resume</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">© Review My Resume</div>', unsafe_allow_html=True)

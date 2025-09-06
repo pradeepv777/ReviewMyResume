@@ -2,7 +2,7 @@ import re
 from collections import Counter
 from typing import Dict, List, Tuple, Optional
 
-# Enhanced grammar checking with fallback mechanisms
+# Section for grammar Check 
 def _get_language_tool():
     """Initialize language tool with multiple fallback options"""
     try:
@@ -10,9 +10,9 @@ def _get_language_tool():
         
         # Try different initialization methods in order of preference
         init_methods = [
-            # Method 1: Try remote API first (most reliable)
+        
             lambda: language_tool_python.LanguageToolPublicAPI('en-US'),
-            # Method 2: Try local installation
+        
             lambda: language_tool_python.LanguageTool('en-US'),
         ]
         
@@ -20,7 +20,7 @@ def _get_language_tool():
             try:
                 print(f"Attempting grammar tool initialization method {i+1}...")
                 tool = method()
-                # Test the tool with a simple sentence
+                
                 test_result = tool.check("This is a test.")
                 print(f"Grammar tool initialized successfully!")
                 return tool
@@ -28,7 +28,7 @@ def _get_language_tool():
                 print(f"Method {i+1} failed: {str(e)}")
                 continue
         
-        print("All grammar tool initialization methods failed")
+        print("All grammar tool initialization methods have failed")
         return None
         
     except ImportError as e:
@@ -43,7 +43,7 @@ def _basic_grammar_check(text: str) -> Tuple[int, List[str]]:
     issues = []
     score = 100
     
-    # Check for common grammar issues with regex
+    # Check for common grammar using Regular Expression incase our language tool doesn't work
     checks = [
         (r'\bi\s', "Use capital 'I' instead of lowercase 'i'"),
         (r'\s+([.,:;!?])', "Remove space before punctuation"),
@@ -65,7 +65,7 @@ def _basic_grammar_check(text: str) -> Tuple[int, List[str]]:
             issues.append(message)
             score -= min(5, len(matches) * 2)
     
-    # Check for sentence structure
+    # Checking for sentence structure
     sentences = re.split(r'[.!?]+', text)
     for sentence in sentences[:10]:  # Check first 10 sentences
         sentence = sentence.strip()
@@ -74,30 +74,29 @@ def _basic_grammar_check(text: str) -> Tuple[int, List[str]]:
             score -= 3
             break
     
-    return max(30, score), issues[:5]  # Return max 5 issues
+    return max(30, score), issues[:5]  # we return 5 issue (increase num if according to need)
 
 def check_grammar(text: str) -> Tuple[int, List[str]]:
     """Main grammar checking function with fallbacks"""
     if not text or len(text.strip()) < 10:
         return 75, ["Text too short for grammar analysis"]
     
-    # Try to use language_tool_python first
     tool = _get_language_tool()
     if tool:
         try:
-            # Check first 2000 characters for performance
+            # Check first 2000 characters to check prformance
             check_text = text[:2000] if len(text) > 2000 else text
             matches = tool.check(check_text)
             
             if not matches:
                 return 100, ["No grammar issues detected"]
             
-            # Filter out style suggestions, keep only real errors
+            #keep only real errors
             real_errors = []
             error_messages = []
             
             for match in matches:
-                # Skip style suggestions and focus on real errors
+                # We focus on real errors only here
                 if any(word in match.ruleId.lower() for word in ['style', 'typography', 'whitespace']):
                     continue
                 if any(word in match.message.lower() for word in ['consider', 'possible', 'style']):
@@ -117,14 +116,14 @@ def check_grammar(text: str) -> Tuple[int, List[str]]:
                 
         except Exception as e:
             print(f"Language tool check failed: {e}")
-            # Fall back to basic grammar check
+            # Fall back to basic grammar check(RegEx)
             return _basic_grammar_check(text)
     else:
-        # Use basic grammar check as fallback
+        # Use basic grammar check as fallback(RegEx)
         print("Using fallback grammar checker")
         return _basic_grammar_check(text)
 
-# Enhanced weights for more balanced scoring
+# Enhanced weights for more balanced scoring(weights to each section can be changed accordingly)
 WEIGHTS = {
     "ats": 12,           # ATS compatibility
     "design": 8,         # Visual design & layout  
@@ -133,13 +132,12 @@ WEIGHTS = {
     "skills": 15,        # Technical skills diversity
     "experience": 12,    # Work experience quality
     "projects": 10,      # Projects with details
-    "contact": 5,        # Contact information
+    "contact": 5,        # Contact info
     "quantification": 8, # Measurable achievements
     "keywords": 6,       # Industry keywords
     "length": 4          # Appropriate length
 }
 
-# Enhanced section detection with more synonyms
 SECTION_SYNONYMS = {
     "experience": [
         "experience", "work experience", "professional experience", "employment history",
@@ -163,7 +161,6 @@ SECTION_SYNONYMS = {
     ]
 }
 
-# Comprehensive skill categories
 SKILL_CATEGORIES = {
     "programming": [
         "python", "java", "javascript", "c++", "c#", "go", "rust", "kotlin", 
@@ -199,21 +196,19 @@ SKILL_CATEGORIES = {
     ]
 }
 
-# Industry-specific keywords
 INDUSTRY_KEYWORDS = [
     "agile", "scrum", "ci/cd", "devops", "microservices", "api", "rest",
     "graphql", "testing", "debugging", "optimization", "performance",
     "security", "authentication", "authorization", "scalability"
 ]
 
-# Action verbs for experience descriptions
 STRONG_ACTION_VERBS = [
     "developed", "built", "created", "designed", "implemented", "led", "managed",
     "optimized", "improved", "reduced", "increased", "achieved", "delivered",
     "launched", "established", "coordinated", "collaborated", "mentored"
 ]
 
-# Contact patterns
+# Contact pattern matching(Add more as needed)
 CONTACT_PATTERNS = {
     "email": r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
     "phone": r"(\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}",
@@ -223,7 +218,7 @@ CONTACT_PATTERNS = {
 }
 
 def assign_tier(score: int) -> str:
-    """Enhanced tier assignment with better thresholds"""
+    
     if score >= 90:
         return "S"
     elif score >= 80:
@@ -236,14 +231,14 @@ def assign_tier(score: int) -> str:
         return "D"
 
 def extract_skills_by_category(text: str) -> Dict[str, List[str]]:
-    """Extract skills organized by category"""
+    
     found_skills = {}
     text_lower = text.lower()
     
     for category, skills in SKILL_CATEGORIES.items():
         found_skills[category] = []
         for skill in skills:
-            # Use word boundary matching for better accuracy
+            # Using word boundary matching for better accuracy
             pattern = r'\b' + re.escape(skill) + r'\b'
             if re.search(pattern, text_lower):
                 found_skills[category].append(skill.title())
@@ -261,13 +256,13 @@ def analyze_experience_quality(text: str) -> Dict:
         'has_duration': False
     }
     
-    # Extract years of experience
+    # Extracting years of experience
     years_pattern = re.compile(r'(\d+)\s*(?:\+)?\s*years?', re.I)
     years_matches = years_pattern.findall(text)
     if years_matches:
         analysis['years_mentioned'] = max([int(y) for y in years_matches])
     
-    # Count companies (look for patterns like "at Company" or "Company, Location")
+    # Count companies 
     company_patterns = [
         r'(?:at|@)\s+([A-Z][a-zA-Z\s&.,]+?)(?:\s*[-—"]|\s*\n|,)',
         r'([A-Z][a-zA-Z\s&.]+),\s+[A-Z][a-zA-Z\s]+\s*(?:\d{4}|\n)'
@@ -278,7 +273,7 @@ def analyze_experience_quality(text: str) -> Dict:
         companies.update([c.strip() for c in matches if len(c.strip()) > 2])
     analysis['companies_count'] = len(companies)
     
-    # Count different role types
+    # Count the different role types
     role_patterns = [
         'software engineer', 'developer', 'analyst', 'manager', 'intern',
         'consultant', 'architect', 'lead', 'senior', 'junior', 'principal'
@@ -296,7 +291,7 @@ def analyze_experience_quality(text: str) -> Dict:
         action_count += matches
     analysis['action_verbs_count'] = action_count
     
-    # Check for job titles
+    # Check for job titles in doc
     job_title_pattern = r'\b(engineer|developer|manager|analyst|consultant|architect|designer|specialist)\b'
     analysis['has_job_titles'] = bool(re.search(job_title_pattern, text, re.I))
     
@@ -326,7 +321,7 @@ def analyze_projects_quality(text: str) -> Dict:
     tech_mentions = re.findall(tech_pattern, text, re.I)
     analysis['has_technologies'] = len(tech_mentions) > 0
     
-    # Check for project links (GitHub, live demo, etc.)
+    # Check for project links in project Section
     link_patterns = [
         r'github\.com\/[\w\-]+\/[\w\-]+',
         r'(demo|live|deployed|hosted).*https?:\/\/[\w\-\.]+',
@@ -344,7 +339,7 @@ def analyze_projects_quality(text: str) -> Dict:
     has_dates = any(re.search(pattern, text, re.I) for pattern in date_patterns)
     analysis['has_dates'] = has_dates
     
-    # Check for metrics/quantification in projects
+    # Check for metrics in projects
     metric_patterns = [
         r'\d+%', r'\d+\+', r'\d+x', r'\d+k\s+(users|downloads|views)',
         r'improved.*\d+', r'reduced.*\d+', r'increased.*\d+'
@@ -371,18 +366,18 @@ def extract_project_section(text: str) -> str:
     return ""
 
 def calculate_ats_score(text: str, parsed_data: Dict) -> Tuple[int, List[str]]:
-    """Enhanced ATS compatibility scoring"""
+    
     score = 100
     feedback = []
     
-    # Word count analysis (ideal: 400-800 words)
+    # Word count analysis of doc and grade
     word_count = len(text.split())
     if word_count < 300:
         score -= 15
-        feedback.append(f"Resume too brief ({word_count} words) - add more detail")
+        feedback.append(f"Resume too brief ({word_count} words), add more relevant information")
     elif word_count > 1200:
         score -= 10
-        feedback.append(f"Resume too lengthy ({word_count} words) - consider condensing")
+        feedback.append(f"Resume too lengthy ({word_count} words), consider shortening with only relevant information")
     
     # Check for problematic formatting
     special_chars = len(re.findall(r'[^\w\s\.\,\-\(\)\[\]\/\@\#\%\&\+]', text))
@@ -418,7 +413,7 @@ def calculate_ats_score(text: str, parsed_data: Dict) -> Tuple[int, List[str]]:
 def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     """Enhanced resume scoring with comprehensive analysis"""
     text = parsed_data.get("raw_text", "").lower()
-    original_text = parsed_data.get("raw_text", "")  # Keep original case for some analysis
+    original_text = parsed_data.get("raw_text", "")  
     
     score = 0.0
     breakdown = {}
@@ -439,7 +434,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     else:
         feedback.append("🔧 Improve layout consistency and visual hierarchy")
     
-    # 3. Grammar & Spelling - ENHANCED VERSION
+    # 3. Grammar check
     print("Starting grammar check...")
     grammar_score, grammar_feedback = check_grammar(original_text)
     breakdown["grammar"] = grammar_score
@@ -448,7 +443,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     if grammar_score >= 95:
         feedback.append("✅ Excellent grammar and spelling")
     elif grammar_score >= 80:
-        feedback.append("✅ Good grammar with minor issues")
+        feedback.append("✅ Good grammar with slight issues")
     else:
         feedback.append("📝 Grammar needs improvement")
     
@@ -495,7 +490,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     exp_analysis = analyze_experience_quality(original_text)
     exp_score = 0
     
-    # Score factors
+    # Scoring
     if exp_analysis['years_mentioned'] > 0:
         exp_score += min(30, exp_analysis['years_mentioned'] * 5)
     if exp_analysis['companies_count'] > 0:
@@ -514,11 +509,11 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     if exp_score >= 80:
         feedback.append("✅ Well-detailed work experience")
     else:
-        feedback.append("💼 Enhance experience with more details, action verbs, and quantified results")
+        feedback.append("💼 Enhance experience section with more relevant information and what you have contributed or learnt")
     
     # 7. Projects Quality
     project_analysis = analyze_projects_quality(original_text)
-    project_score = 40  # Base score
+    project_score = 40  
     
     if project_analysis['project_count'] > 0:
         project_score += min(20, project_analysis['project_count'] * 5)
@@ -564,7 +559,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     else:
         feedback.append("✅ Complete contact information")
     
-    # 9. Quantification
+    # 9. Quantification(Contribution in metrics)
     quantification_patterns = [
         r'\d+%', r'\d+\+', r'\d+x', r'\d+k\b', r'\d+m\b',
         r'\$\d+', r'\d+\s*(users|customers|projects|hours)',
@@ -583,7 +578,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     if quant_score >= 80:
         feedback.append(f"📊 Good use of metrics ({len(quantified_results)} quantified results)")
     else:
-        feedback.append("📊 Add more quantified achievements (percentages, numbers, impact)")
+        feedback.append("📊 Add more quantified achievements i.e percentages, numbers, your impact")
     
     # 10. Industry Keywords
     keyword_count = 0
@@ -596,11 +591,11 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     score += (keyword_score / 100) * WEIGHTS["keywords"]
     
     if keyword_score >= 70:
-        feedback.append(f"🔑 Good industry keyword usage ({keyword_count} found)")
+        feedback.append(f"🔑 Good industry keyword usage ({keyword_count} are found)")
     else:
-        feedback.append("🔍 Include more industry-relevant keywords (agile, API, testing, etc.)")
+        feedback.append("🔍 Include more industry relevant keywords (agile, API, testing, etc.)")
     
-    # 11. Length Appropriateness
+    # 11. Length of doc
     word_count = len(original_text.split())
     if 400 <= word_count <= 800:
         length_score = 100
@@ -608,7 +603,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
         length_score = 85
     elif word_count < 300:
         length_score = max(40, (word_count / 300) * 100)
-    else:  # > 1000
+    else:  # if more than a 1000 words
         length_score = max(60, 100 - ((word_count - 1000) / 20))
     
     breakdown["length"] = int(length_score)
@@ -621,16 +616,15 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     # Add summary feedback at the beginning
     summary = f"Overall Score: {final_score}/100 (Tier {tier})"
     if final_score >= 90:
-        summary += " - Outstanding! Your resume is highly competitive."
+        summary += " - Outstanding! Your resume is well made and ready."
     elif final_score >= 80:
-        summary += " - Excellent! Minor improvements will make it perfect."
+        summary += " - Excellent! Minor improvements will make your resume perfect."
     elif final_score >= 70:
-        summary += " - Good foundation with room for enhancement."
+        summary += " - Good foundation with room for improvement."
     elif final_score >= 60:
-        summary += " - Decent start, focus on key improvements."
+        summary += " - Decent resume, but a few improvements and changes are recommended."
     else:
-        summary += " - Significant improvements needed."
+        summary += " - Significant improvements are needed."
     
     feedback.insert(0, summary)
-    
     return final_score, feedback, breakdown

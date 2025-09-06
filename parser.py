@@ -26,10 +26,10 @@ def extract_text_from_pdf(pdf_path: str) -> str:
     try:
         with pdfplumber.open(pdf_path) as pdf:
             for page in pdf.pages:
-                # prefer extract_text over raw chars so ligatures get normalized
+                
                 page_text = page.extract_text() or ""
                 text += page_text + "\n"
-            # annotations (hyperlinks)
+            # Section for links
             for page in pdf.pages:
                 if page.annots:
                     for annot in page.annots:
@@ -71,7 +71,7 @@ def extract_skills(text: str) -> List[str]:
     return sorted(set(skills_found))
 
 def _heuristic_ats_score(text: str) -> int:
-    # Start at 100, deduct for potential ATS issues
+    # we start at 100, deduct for potential ATS issues
     raw = text
     if not raw:
         return 40
@@ -79,30 +79,30 @@ def _heuristic_ats_score(text: str) -> int:
     ascii_printable = sum(ch.isascii() and (31 < ord(ch) < 127 or ch in "\n\t") for ch in raw)
     non_ascii_ratio = 1 - (ascii_printable / max(total_chars, 1))
     score = 100
-    # Deduct if many non-ascii/ligature characters
+    
     if non_ascii_ratio > 0.02:
         score -= int(min(30, non_ascii_ratio * 100))
-    # Deduct if many consecutive spaces (likely multi-column/tabular layout)
+   
     if re.search(r'[ ]{6,}', raw):
         score -= 15
-    # Deduct if very short (low extractable text)
+  
     if total_chars < 800:
         score -= 20
     return max(40, min(100, score))
 
 def _heuristic_design_score(text: str) -> int:
-    # Basic readability/layout heuristics
+    
     score = 70
-    # Bonus for bullets
+    
     if re.search(r'(^|\n)\s*(•|-|\*)\s+', text):
         score += 10
-    # Penalize for long URLs or excessive underlines
+    
     if re.search(r'https?://\S{60,}', text):
         score -= 10
-    # Penalize for inconsistent spacing
+    
     if re.search(r'\n\s*\n\s*\n', text):
         score -= 5
-    # Penalize if lines are extremely long (no wrapping)
+    
     long_line = any(len(line) > 140 for line in text.splitlines())
     if long_line:
         score -= 10
@@ -110,7 +110,7 @@ def _heuristic_design_score(text: str) -> int:
 
 def parse_resume(filepath: str) -> Dict:
     text = extract_text_from_pdf(filepath)
-    # Keep original-case text for display, lower for detection
+    
     email = extract_email(text)
     phone = extract_phone(text)
     linkedin, github = extract_links(text)
