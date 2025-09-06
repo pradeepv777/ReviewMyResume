@@ -13,8 +13,6 @@
    # Activate
    # Windows:
    .venv\Scripts\activate
-   # macOS/Linux:
-   source .venv/bin/activate
    ```
 
 3. **Install dependencies**
