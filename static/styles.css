@@ -8,9 +8,9 @@ html, body, .stApp {
     height: 100%;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #e4308d,#dcd9da) !important;
+    background: linear-gradient(to right, #0a2259, #6f8f8f, #e8b459, #9c4f09) !important;
     background-attachment: fixed !important;
-    color: rgb(15, 14, 14) !important;
+    color: rgb(250,250,250) !important;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
 }
