@@ -449,7 +449,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     
     # Add specific grammar feedback
     for gf in grammar_feedback[:3]:  # Show max 3 grammar issues
-        feedback.append(f"   • {gf}")
+        feedback.append(f"    {gf}")
     
     # 4. Required Sections
     present_sections = []
