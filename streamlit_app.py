@@ -153,4 +153,4 @@ elif st.session_state.page == "results":
         st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer">© Review My Resume</div>', unsafe_allow_html=True) remove loading circle and entire how does this work section leep everything else
+st.markdown('<div class="footer">© Review My Resume</div>', unsafe_allow_html=True) 
