@@ -1,16 +1,11 @@
-/* ===== REMOVE DEFAULT STREAMLIT WHITE HEADER & FOOTER ===== */
-header, footer, .viewerBadge_link__qRIco, .stDeployButton, #MainMenu {
-    display: none !important;
-}
-
-/* ===== GLOBAL PAGE LAYOUT ===== */
+/* MAIN PAGE LAYOUT */
 html, body, .stApp {
     height: 100%;
     margin: 0;
     padding: 0;
     background: linear-gradient(to right, #0a2259, #6f8f8f, #e8b459, #9c4f09) !important;
     background-attachment: fixed !important;
-    color: rgb(250,250,250) !important;
+    color: rgb(253, 251, 251) !important;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
 }
@@ -26,7 +21,7 @@ html, body, .stApp {
     min-height: 100vh;
 }
 
-/* ===== TOP BAR ===== */
+/* TOP BAR */
 .topbar {
     width: 100%;
     padding: 1rem 2rem;
@@ -45,39 +40,30 @@ html, body, .stApp {
     justify-content: flex-start;
 }
 
-/* ===== CONTENT ===== */
+/* CONTENT */
 .content {
-    padding-top: 4rem; /* reduced space for fixed topbar */
+    padding-top: 4rem;
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem; /* smaller gap between hero text and upload card */
+    gap: 0.5rem;
 }
 
-/* ===== HERO SECTION ===== */
-.hero-left {
-    max-width: 600px;
-    margin-top: -0.5rem; /* move slightly up */
-    text-align: left;
-    line-height: 1.4;
-    font-size: 1.05rem;
-}
-
-/* ===== UPLOAD CARD ===== */
+/* UPLOAD CARD */
 .upload-card {
     background-color: rgba(255, 255, 255, 0.06);
-    padding: 1.8rem 2rem; /* slightly smaller padding */
+    padding: 1.8rem 2rem;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(8px);
     text-align: center;
-    margin-top: 0; /* remove extra top margin */
+    margin-top: 0;
     width: 90%;
     max-width: 500px;
 }
 
-/* ===== BUTTONS ===== */
+/* BUTTONS */
 .stButton button {
     background-color: #ff69b4;
     color: white;
@@ -94,7 +80,7 @@ html, body, .stApp {
     transform: translateY(-2px);
 }
 
-/* ===== FOOTER ===== */
+/* FOOTER */
 .footer {
     width: 100vw;
     margin: 0;
@@ -111,54 +97,8 @@ html, body, .stApp {
     justify-content: center;
 }
 
-/* ===== HOW IT WORKS SECTION ===== */
-.steps-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 2rem;
-    margin-top: 2rem;
-    margin-bottom: 2rem;
-}
-.step {
-    background: white;   /* white box */
-    color: black;        /* black text */
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid rgba(0,0,0,0.2);
-    text-align: center;
-    width: 220px;
-    margin-bottom: 1rem;
-}
-.step h3 {
-    margin-bottom: 0.5rem;
-    color: black !important;
-}
-.step p {
-    margin-top: 0;
-    font-size: 0.95rem;
-    line-height: 1.4;
-}
-
-/* ===== REMOVE EXTRA STREAMLIT PADDING/GAPS ===== */
-main blockquote, .stBlock, .stMarkdown, .stText, .stButton, .stForm, .stExpander {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
-}
-main .stText, main .stMarkdown {
-    margin-bottom: 0 !important;
-}
-
-/* ===== RESPONSIVE ===== */
+/* RESPONSIVE */
 @media screen and (max-width: 768px) {
-    .steps-container {
-        flex-direction: column;
-        align-items: center;
-    }
-    .step {
-        width: 80%;
-    }
     .upload-card {
         width: 95%;
     }
