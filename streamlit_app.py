@@ -7,7 +7,7 @@ import time
 
 st.set_page_config(page_title="Review My Resume", layout="wide")
 
-# Load the styles.css file
+# Load the styles.css  file
 def load_css(file_name):
     try:
         with open(file_name) as f:
@@ -16,6 +16,9 @@ def load_css(file_name):
         pass
 
 load_css("static/styles.css")
+
+# Hide Streamlit header
+st.markdown("""<style>[data-testid="stHeader"] {display: none;}</style>""", unsafe_allow_html=True)
 
 st.markdown("""
 <style>
@@ -58,11 +61,12 @@ if st.session_state.page == "home":
         st.markdown('<div class="upload-card">', unsafe_allow_html=True)
         st.markdown("### Upload Your Resume")
         uploaded_file = st.file_uploader("Drop your resume here or choose a file", type=["pdf"], label_visibility="collapsed")
+        st.markdown('<p>PDF only. Max 2MB file size.</p>', unsafe_allow_html=True)
 
         if uploaded_file:
             st.session_state["resume_file"] = uploaded_file
             if st.button("Analyze Resume"):
-                # For
+                # Show full-page centered loading spinner with blur
                 loading_placeholder = st.empty()
                 with loading_placeholder.container():
                     st.markdown("""
@@ -153,4 +157,4 @@ elif st.session_state.page == "results":
         st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer">© Review My Resume</div>', unsafe_allow_html=True) 
+st.markdown('<div class="footer">© Review My Resume</div>', unsafe_allow_html=True)
