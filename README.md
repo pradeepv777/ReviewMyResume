@@ -5,13 +5,11 @@
 ## Quickstart (VS Code)
 
 1. **Open folder**
-   - In VS Code: *File → Open Folder…* and select this project.
+   - Open this project in vs code or you can clone it directly using the repository link.
 
 2. **Create a virtual environment**
    ```bash
    python -m venv .venv
-   # Activate
-   # Windows:
    .venv\Scripts\activate
    ```
 
@@ -26,4 +24,4 @@
    ```
 
 5. **Open the app**
-   - Your browser should open automatically. If not, copy the provided URL into your browser.
+   - Your browser should open automatically.
