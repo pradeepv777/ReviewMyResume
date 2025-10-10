@@ -1,9 +1,8 @@
 import streamlit as st
 from pathlib import Path
 from parser import parse_resume
-from scoring import score_resume
+from scoring import score_resume, assign_tier
 from results import show_results
-import time
 
 st.set_page_config(page_title="Review My Resume", layout="wide")
 
@@ -69,16 +68,7 @@ if st.session_state.page == "home":
             
             parsed_data = parse_resume(str(temp_path))
             final_score, feedback, breakdown = score_resume(parsed_data)
-
-            # Calculate the tier of resume
-            if final_score >= 85:
-                tier = "A"
-            elif final_score >= 70:
-                tier = "B"
-            elif final_score >= 50:
-                tier = "C"
-            else:
-                tier = "D"
+            tier = assign_tier(final_score)
 
             st.session_state.final_score = final_score
             st.session_state.tier = tier

@@ -1,426 +1,154 @@
 import re
-from collections import Counter
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
-# Section for grammar Check 
-def _get_language_tool():
-    """Initialize language tool with multiple fallback options"""
-    try:
-        import language_tool_python
-        
-        # Try different initialization methods in order of preference
-        init_methods = [
-        
-            lambda: language_tool_python.LanguageToolPublicAPI('en-US'),
-        
-            lambda: language_tool_python.LanguageTool('en-US'),
-        ]
-        
-        for i, method in enumerate(init_methods):
-            try:
-                print(f"Attempting grammar tool initialization method {i+1}...")
-                tool = method()
-                
-                test_result = tool.check("This is a test.")
-                print(f"Grammar tool initialized successfully!")
-                return tool
-            except Exception as e:
-                print(f"Method {i+1} failed: {str(e)}")
-                continue
-        
-        print("All grammar tool initialization methods have failed")
-        return None
-        
-    except ImportError as e:
-        print(f"language-tool-python not installed: {e}")
-        return None
-    except Exception as e:
-        print(f"Unexpected error initializing language tool: {e}")
-        return None
-
-def _basic_grammar_check(text: str) -> Tuple[int, List[str]]:
-    """Fallback grammar checker using basic rules"""
-    issues = []
-    score = 100
-    
-    # Check for common grammar using Regular Expression incase our language tool doesn't work
-    checks = [
-        (r'\bi\s', "Use capital 'I' instead of lowercase 'i'"),
-        (r'\s+([.,:;!?])', "Remove space before punctuation"),
-        (r'([.!?])\s*([a-z])', "Capitalize first letter after sentence"),
-        (r'\s{2,}', "Remove multiple spaces"),
-        (r'\b(teh|tehm|adn|nad|hte)\b', "Fix common typos"),
-        (r'\b(recieve)\b', "Correct spelling: 'receive'"),
-        (r'\b(seperate)\b', "Correct spelling: 'separate'"),
-        (r'\b(definately)\b', "Correct spelling: 'definitely'"),
-        (r'\b(managment)\b', "Correct spelling: 'management'"),
-        (r'\b(responsibile)\b', "Correct spelling: 'responsible'"),
-        (r'\b(experiance)\b', "Correct spelling: 'experience'"),
-        (r'\b(developement)\b', "Correct spelling: 'development'"),
-    ]
-    
-    for pattern, message in checks:
-        matches = re.findall(pattern, text, re.IGNORECASE)
-        if matches:
-            issues.append(message)
-            score -= min(5, len(matches) * 2)
-    
-    # Checking for sentence structure
-    sentences = re.split(r'[.!?]+', text)
-    for sentence in sentences[:10]:  # Check first 10 sentences
-        sentence = sentence.strip()
-        if sentence and len(sentence) > 100:
-            issues.append("Consider breaking up long sentences")
-            score -= 3
-            break
-    
-    return max(30, score), issues[:5]  # we return 5 issue (increase num if according to need)
-
-def check_grammar(text: str) -> Tuple[int, List[str]]:
-    """Main grammar checking function with fallbacks"""
-    if not text or len(text.strip()) < 10:
-        return 75, ["Text too short for grammar analysis"]
-    
-    tool = _get_language_tool()
-    if tool:
-        try:
-            # Check first 2000 characters to check prformance
-            check_text = text[:2000] if len(text) > 2000 else text
-            matches = tool.check(check_text)
-            
-            if not matches:
-                return 100, ["No grammar issues detected"]
-            
-            #keep only real errors
-            real_errors = []
-            error_messages = []
-            
-            for match in matches:
-                # We focus on real errors only here
-                if any(word in match.ruleId.lower() for word in ['style', 'typography', 'whitespace']):
-                    continue
-                if any(word in match.message.lower() for word in ['consider', 'possible', 'style']):
-                    continue
-                    
-                real_errors.append(match)
-                if len(error_messages) < 5:  # Limit to 5 messages
-                    error_messages.append(f"{match.message}")
-            
-            error_count = len(real_errors)
-            grammar_score = max(40, 100 - (error_count * 8))
-            
-            if error_count == 0:
-                return 95, ["Excellent grammar and spelling"]
-            else:
-                return grammar_score, error_messages
-                
-        except Exception as e:
-            print(f"Language tool check failed: {e}")
-            # Fall back to basic grammar check(RegEx)
-            return _basic_grammar_check(text)
-    else:
-        # Use basic grammar check as fallback(RegEx)
-        print("Using fallback grammar checker")
-        return _basic_grammar_check(text)
-
-# Enhanced weights for more balanced scoring(weights to each section can be changed accordingly)
+# Scoring weights
 WEIGHTS = {
-    "ats": 12,           # ATS compatibility
-    "design": 8,         # Visual design & layout  
-    "grammar": 8,        # Grammar and spelling
-    "sections": 12,      # Required sections presence
-    "skills": 15,        # Technical skills diversity
-    "experience": 12,    # Work experience quality
-    "projects": 10,      # Projects with details
-    "contact": 5,        # Contact info
-    "quantification": 8, # Measurable achievements
-    "keywords": 6,       # Industry keywords
-    "length": 4          # Appropriate length
+    "ats": 14,
+    "design": 10,
+    "sections": 14,
+    "skills": 16,
+    "experience": 14,
+    "projects": 12,
+    "contact": 6,
+    "quantification": 8,
+    "keywords": 6
 }
 
 SECTION_SYNONYMS = {
-    "experience": [
-        "experience", "work experience", "professional experience", "employment history",
-        "career summary", "job history", "work history", "professional background",
-        "employment", "career", "positions", "roles"
-    ],
-    "education": [
-        "education", "academics", "academic background", "educational qualifications",
-        "academic qualifications", "education & certifications", "education and training", 
-        "scholastics", "degrees", "university", "college", "school"
-    ],
-    "skills": [
-        "skills", "technical skills", "tech stack", "technologies", "core competencies",
-        "programming skills", "technical proficiency", "tools & technologies",
-        "competencies", "abilities", "expertise", "proficiencies"
-    ],
-    "projects": [
-        "projects", "personal projects", "academic projects", "project highlights",
-        "notable projects", "key projects", "project work", "major projects",
-        "portfolio", "work samples"
-    ]
+    "experience": ["experience", "work experience", "professional experience", "employment"],
+    "education": ["education", "academics", "academic background"],
+    "skills": ["skills", "technical skills", "tech stack", "technologies"],
+    "projects": ["projects", "personal projects", "portfolio"]
 }
 
-SKILL_CATEGORIES = {
-    "programming": [
-        "python", "java", "javascript", "c++", "c#", "go", "rust", "kotlin", 
-        "swift", "php", "ruby", "scala", "typescript", "dart", "r"
-    ],
-    "web_frontend": [
-        "react", "angular", "vue", "html", "css", "sass", "less", "bootstrap",
-        "tailwind", "jquery", "webpack", "babel", "next.js", "gatsby"
-    ],
-    "web_backend": [
-        "node.js", "express", "django", "flask", "spring", "laravel", "rails",
-        "asp.net", "fastapi", "nestjs", "koa", "meteor"
-    ],
-    "databases": [
-        "mysql", "postgresql", "mongodb", "redis", "cassandra", "sqlite",
-        "oracle", "sql server", "dynamodb", "elasticsearch", "neo4j"
-    ],
-    "cloud": [
-        "aws", "azure", "gcp", "docker", "kubernetes", "terraform", "ansible",
-        "jenkins", "gitlab", "github actions", "heroku", "vercel", "netlify"
-    ],
-    "data_science": [
-        "pandas", "numpy", "scikit-learn", "tensorflow", "pytorch", "keras",
-        "matplotlib", "seaborn", "plotly", "jupyter", "spark", "hadoop"
-    ],
-    "mobile": [
-        "android", "ios", "react native", "flutter", "xamarin", "cordova",
-        "ionic", "unity", "unreal engine"
-    ],
-    "tools": [
-        "git", "github", "gitlab", "jira", "confluence", "postman", "figma",
-        "photoshop", "illustrator", "sketch", "linux", "bash", "powershell"
-    ]
-}
+SKILL_KEYWORDS = [
+    "python", "java", "javascript", "c++", "c#", "go", "rust", "typescript",
+    "react", "angular", "vue", "html", "css", "sass", "bootstrap", "tailwind",
+    "node.js", "express", "django", "flask", "spring", "fastapi",
+    "mysql", "postgresql", "mongodb", "redis", "sql",
+    "aws", "azure", "gcp", "docker", "kubernetes", "jenkins",
+    "git", "github", "gitlab", "jira", "linux", "bash"
+]
 
 INDUSTRY_KEYWORDS = [
-    "agile", "scrum", "ci/cd", "devops", "microservices", "api", "rest",
-    "graphql", "testing", "debugging", "optimization", "performance",
-    "security", "authentication", "authorization", "scalability"
+    "agile", "scrum", "devops", "api", "rest", "testing", "ci/cd",
+    "microservices", "cloud", "security", "performance", "optimization"
 ]
 
-STRONG_ACTION_VERBS = [
-    "developed", "built", "created", "designed", "implemented", "led", "managed",
-    "optimized", "improved", "reduced", "increased", "achieved", "delivered",
-    "launched", "established", "coordinated", "collaborated", "mentored"
+ACTION_VERBS = [
+    "developed", "built", "created", "designed", "implemented",
+    "led", "managed", "optimized", "improved", "achieved"
 ]
-
-# Contact pattern matching(Add more as needed)
 CONTACT_PATTERNS = {
     "email": r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
-    "phone": r"(\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}",
     "linkedin": r"linkedin\.com\/in\/[\w\-]+",
-    "github": r"github\.com\/[\w\-]+",
-    "portfolio": r"(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:\/?#[\]@!$&'()*+,;%=]*)?",
+    "github": r"github\.com\/[\w\-]+"
 }
 
 def assign_tier(score: int) -> str:
-    
-    if score >= 90:
-        return "S"
-    elif score >= 80:
-        return "A"
-    elif score >= 70:
-        return "B"
-    elif score >= 60:
-        return "C"
-    else:
-        return "D"
+    if score >= 85: return "A"
+    elif score >= 70: return "B"
+    elif score >= 50: return "C"
+    else: return "D"
 
-def extract_skills_by_category(text: str) -> Dict[str, List[str]]:
-    
-    found_skills = {}
+def count_skills(text: str) -> int:
     text_lower = text.lower()
-    
-    for category, skills in SKILL_CATEGORIES.items():
-        found_skills[category] = []
-        for skill in skills:
-            # Using word boundary matching for better accuracy
-            pattern = r'\b' + re.escape(skill) + r'\b'
-            if re.search(pattern, text_lower):
-                found_skills[category].append(skill.title())
-    
-    return found_skills
+    count = 0
+    for skill in SKILL_KEYWORDS:
+        if re.search(r'\b' + re.escape(skill) + r'\b', text_lower):
+            count += 1
+    return count
 
-def analyze_experience_quality(text: str) -> Dict:
-    """Analyze quality of work experience descriptions"""
-    analysis = {
-        'years_mentioned': 0,
-        'companies_count': 0,
-        'roles_count': 0,
-        'action_verbs_count': 0,
-        'has_job_titles': False,
-        'has_duration': False
-    }
+def check_experience(text: str) -> int:
+    score = 40
     
-    # Extracting years of experience
-    years_pattern = re.compile(r'(\d+)\s*(?:\+)?\s*years?', re.I)
-    years_matches = years_pattern.findall(text)
-    if years_matches:
-        analysis['years_mentioned'] = max([int(y) for y in years_matches])
+    # Check for years of experience
+    years_match = re.findall(r'(\d+)\s*(?:\+)?\s*years?', text, re.I)
+    if years_match:
+        max_years = max([int(y) for y in years_match])
+        score += min(25, max_years * 4)
     
-    # Count companies 
-    company_patterns = [
-        r'(?:at|@)\s+([A-Z][a-zA-Z\s&.,]+?)(?:\s*[-—"]|\s*\n|,)',
-        r'([A-Z][a-zA-Z\s&.]+),\s+[A-Z][a-zA-Z\s]+\s*(?:\d{4}|\n)'
-    ]
-    companies = set()
-    for pattern in company_patterns:
-        matches = re.findall(pattern, text, re.M)
-        companies.update([c.strip() for c in matches if len(c.strip()) > 2])
-    analysis['companies_count'] = len(companies)
+    # Check for job titles
+    job_titles = ['engineer', 'developer', 'manager', 'analyst', 'architect', 'lead']
+    title_count = sum(1 for title in job_titles if re.search(r'\b' + title + r'\b', text, re.I))
+    score += min(20, title_count * 7)
     
-    # Count the different role types
-    role_patterns = [
-        'software engineer', 'developer', 'analyst', 'manager', 'intern',
-        'consultant', 'architect', 'lead', 'senior', 'junior', 'principal'
-    ]
-    roles_found = set()
-    for role in role_patterns:
-        if re.search(r'\b' + role + r'\b', text, re.I):
-            roles_found.add(role)
-    analysis['roles_count'] = len(roles_found)
+    # Check for action verbs
+    verb_count = sum(1 for verb in ACTION_VERBS if re.search(r'\b' + verb + r'\b', text, re.I))
+    score += min(20, verb_count * 3)
     
-    # Count strong action verbs
-    action_count = 0
-    for verb in STRONG_ACTION_VERBS:
-        matches = len(re.findall(r'\b' + verb + r'\b', text, re.I))
-        action_count += matches
-    analysis['action_verbs_count'] = action_count
+    # Check for company mentions
+    if re.search(r'(?:at|@)\s+[A-Z][a-zA-Z\s&]+', text):
+        score += 15
     
-    # Check for job titles in doc
-    job_title_pattern = r'\b(engineer|developer|manager|analyst|consultant|architect|designer|specialist)\b'
-    analysis['has_job_titles'] = bool(re.search(job_title_pattern, text, re.I))
-    
-    # Check for duration mentions (months, years)
-    duration_pattern = r'\b(\d+\s*(months?|years?|yrs?)|\w+\s+\d{4}\s*[-—]\s*\w+\s+\d{4})'
-    analysis['has_duration'] = bool(re.search(duration_pattern, text, re.I))
-    
-    return analysis
+    return min(100, score)
 
-def analyze_projects_quality(text: str) -> Dict:
-    """Analyze quality of project descriptions"""
-    analysis = {
-        'project_count': 0,
-        'has_technologies': False,
-        'has_links': False,
-        'has_dates': False,
-        'has_metrics': False,
-        'description_quality': 0
-    }
+def check_projects(text: str) -> int:
+    score = 30
     
-    # Count projects (look for bullet points in projects section)
-    project_bullets = len(re.findall(r'(^|\n)\s*[•\-\*]\s+', text))
-    analysis['project_count'] = project_bullets
+    # Count project bullets
+    project_count = len(re.findall(r'(^|\n)\s*[•\-\*]\s+', text))
+    score += min(25, project_count * 8)
+    
+    # Check for GitHub links
+    github_links = len(re.findall(r'github\.com/[\w\-]+/[\w\-]+', text, re.I))
+    score += min(20, github_links * 10)
     
     # Check for technology mentions
-    tech_pattern = r'(?:using|with|built\s+with|technologies?:?|stack:?)\s*([a-zA-Z,\s&.+#-]+)'
-    tech_mentions = re.findall(tech_pattern, text, re.I)
-    analysis['has_technologies'] = len(tech_mentions) > 0
-    
-    # Check for project links in project Section
-    link_patterns = [
-        r'github\.com\/[\w\-]+\/[\w\-]+',
-        r'(demo|live|deployed|hosted).*https?:\/\/[\w\-\.]+',
-        r'https?:\/\/[\w\-\.]+\.(herokuapp|vercel|netlify|github\.io)'
-    ]
-    has_links = any(re.search(pattern, text, re.I) for pattern in link_patterns)
-    analysis['has_links'] = has_links
+    if re.search(r'(using|built with|technologies|stack)', text, re.I):
+        score += 15
     
     # Check for project dates
-    date_patterns = [
-        r'\b\d{4}\b',
-        r'\b\d{1,2}\/\d{4}\b',
-        r'\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{4}\b'
-    ]
-    has_dates = any(re.search(pattern, text, re.I) for pattern in date_patterns)
-    analysis['has_dates'] = has_dates
+    if re.search(r'\b\d{4}\b', text):
+        score += 10
     
-    # Check for metrics in projects
-    metric_patterns = [
-        r'\d+%', r'\d+\+', r'\d+x', r'\d+k\s+(users|downloads|views)',
-        r'improved.*\d+', r'reduced.*\d+', r'increased.*\d+'
-    ]
-    has_metrics = any(re.search(pattern, text, re.I) for pattern in metric_patterns)
-    analysis['has_metrics'] = has_metrics
-    
-    # Assess description quality (length, detail)
-    project_section = extract_project_section(text)
-    if project_section:
-        words_in_projects = len(project_section.split())
-        analysis['description_quality'] = min(100, (words_in_projects / 100) * 100)
-    
-    return analysis
+    return min(100, score)
 
-def extract_project_section(text: str) -> str:
-    """Extract the projects section from resume text"""
-    project_keywords = ['projects', 'portfolio', 'work samples']
-    for keyword in project_keywords:
-        pattern = rf'(?i)\b{keyword}\b.*?(?=\n\s*\n|\n\s*[A-Z][A-Za-z\s]+:|\Z)'
-        match = re.search(pattern, text, re.DOTALL)
-        if match:
-            return match.group(0)
-    return ""
-
-def calculate_ats_score(text: str, parsed_data: Dict) -> Tuple[int, List[str]]:
-    
+def check_ats(text: str) -> Tuple[int, List[str]]:
     score = 100
     feedback = []
-    
-    # Word count analysis of doc and grade
     word_count = len(text.split())
+    
+    # Word count check
     if word_count < 300:
-        score -= 15
-        feedback.append(f"Resume too brief ({word_count} words), add more relevant information")
+        score -= 20
+        feedback.append(f"Resume too short ({word_count} words)")
     elif word_count > 1200:
         score -= 10
-        feedback.append(f"Resume too lengthy ({word_count} words), consider shortening with only relevant information")
+        feedback.append(f"Resume too long ({word_count} words)")
     
-    # Check for problematic formatting
+    # Bullet points check
+    bullet_count = len(re.findall(r'[•\-\*]', text))
+    if bullet_count < 5:
+        score -= 15
+        feedback.append("Add more bullet points")
+    elif bullet_count > 3:
+        score += 5
+    
+    # Special characters check
     special_chars = len(re.findall(r'[^\w\s\.\,\-\(\)\[\]\/\@\#\%\&\+]', text))
     if special_chars > 30:
-        score -= 12
-        feedback.append("Too many special characters may confuse ATS systems")
+        score -= 10
+        feedback.append("Too many special characters")
     
-    # Check for proper bullet point usage
-    bullet_count = len(re.findall(r'(^|\n)\s*[•\-\*]\s+', text))
-    if bullet_count < 5:
-        score -= 8
-        feedback.append("Add more bullet points for better structure")
-    
-    # Check for consistent date formatting
-    date_formats = set()
-    date_patterns = [r'\d{4}', r'\d{1,2}\/\d{4}', r'\d{1,2}-\d{4}']
-    for pattern in date_patterns:
-        if re.search(pattern, text):
-            date_formats.add(pattern)
-    
-    if len(date_formats) > 2:
-        score -= 5
-        feedback.append("Use consistent date formatting throughout")
-    
-    # Check for proper section headers
-    section_headers = len(re.findall(r'^\s*[A-Z][A-Za-z\s&]+\s*$', text, re.M))
-    if section_headers < 3:
+    # Section headers check
+    headers = len(re.findall(r'^\s*[A-Z][A-Za-z\s&]+\s*$', text, re.M))
+    if headers < 3:
         score -= 8
         feedback.append("Add clear section headers")
     
     return max(40, score), feedback
 
 def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
-    """Enhanced resume scoring with comprehensive analysis"""
     text = parsed_data.get("raw_text", "").lower()
-    original_text = parsed_data.get("raw_text", "")  
+    original_text = parsed_data.get("raw_text", "")
     
     score = 0.0
     breakdown = {}
     feedback = []
     
     # 1. ATS Compatibility
-    ats_score, ats_feedback = calculate_ats_score(original_text, parsed_data)
+    ats_score, ats_feedback = check_ats(original_text)
     breakdown["ats"] = ats_score
     score += ats_score * WEIGHTS["ats"] / 100
     feedback.extend(ats_feedback)
@@ -432,199 +160,112 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     if design_score > 80:
         feedback.append("Clean, professional layout")
     else:
-        feedback.append("🔧 Improve layout consistency and visual hierarchy")
+        feedback.append("Improve layout and formatting")
     
-    # 3. Grammar check
-    print("Starting grammar check...")
-    grammar_score, grammar_feedback = check_grammar(original_text)
-    breakdown["grammar"] = grammar_score
-    score += (grammar_score / 100) * WEIGHTS["grammar"]
-    
-    if grammar_score >= 95:
-        feedback.append("✅ Excellent grammar and spelling")
-    elif grammar_score >= 80:
-        feedback.append("✅ Good grammar with slight issues")
-    else:
-        feedback.append("📝 Grammar needs improvement")
-    
-    # Add specific grammar feedback
-    for gf in grammar_feedback[:3]:  # Show max 3 grammar issues
-        feedback.append(f"   {gf}")
-    
-    # 4. Required Sections
-    present_sections = []
-    missing_sections = []
-    
+    # 3. Required Sections
+    present = []
+    missing = []
     for section, synonyms in SECTION_SYNONYMS.items():
-        found = any(re.search(r"\b" + re.escape(syn) + r"\b", text) for syn in synonyms)
-        if found:
-            present_sections.append(section)
+        if any(re.search(r"\b" + re.escape(syn) + r"\b", text) for syn in synonyms):
+            present.append(section)
         else:
-            missing_sections.append(section)
+            missing.append(section)
     
-    section_score = (len(present_sections) / len(SECTION_SYNONYMS)) * 100
+    section_score = (len(present) / len(SECTION_SYNONYMS)) * 100
     breakdown["sections"] = int(section_score)
     score += (section_score / 100) * WEIGHTS["sections"]
     
-    if missing_sections:
-        feedback.append(f"📋 Add missing sections: {', '.join(missing_sections)}")
+    if missing:
+        feedback.append(f"Missing sections: {', '.join(missing)}")
     else:
-        feedback.append("✅ All essential sections present")
+        feedback.append("All essential sections present")
     
-    # 5. Skills Analysis
-    skills_by_category = extract_skills_by_category(original_text)
-    total_skills = sum(len(skills) for skills in skills_by_category.values())
-    skill_categories = len([cat for cat, skills in skills_by_category.items() if skills])
-    
-    # Score based on both quantity and diversity
-    skill_score = min(100, (total_skills * 3) + (skill_categories * 10))
+    # 4. Technical Skills
+    skill_count = count_skills(original_text)
+    skill_score = min(100, skill_count * 8 + 30)
     breakdown["skills"] = skill_score
     score += (skill_score / 100) * WEIGHTS["skills"]
     
-    if skill_score >= 80:
-        feedback.append(f"💪 Strong technical skills ({total_skills} across {skill_categories} categories)")
+    if skill_count >= 10:
+        feedback.append(f"Strong technical skills ({skill_count} found)")
+    elif skill_count >= 5:
+        feedback.append(f"Good skills ({skill_count} found)")
     else:
-        feedback.append(f"🛠️ Expand technical skills ({total_skills} found) - add more technologies")
+        feedback.append(f"Add more technical skills ({skill_count} found)")
     
-    # 6. Experience Quality
-    exp_analysis = analyze_experience_quality(original_text)
-    exp_score = 0
-    
-    # Scoring
-    if exp_analysis['years_mentioned'] > 0:
-        exp_score += min(30, exp_analysis['years_mentioned'] * 5)
-    if exp_analysis['companies_count'] > 0:
-        exp_score += min(20, exp_analysis['companies_count'] * 10)
-    if exp_analysis['has_job_titles']:
-        exp_score += 20
-    if exp_analysis['has_duration']:
-        exp_score += 15
-    if exp_analysis['action_verbs_count'] > 5:
-        exp_score += 15
-    
-    exp_score = min(100, max(30, exp_score))
+    # 5. Work Experience
+    exp_score = check_experience(original_text)
     breakdown["experience"] = exp_score
     score += (exp_score / 100) * WEIGHTS["experience"]
     
     if exp_score >= 80:
-        feedback.append("✅ Well-detailed work experience")
+        feedback.append("Well-detailed work experience")
+    elif exp_score >= 60:
+        feedback.append("Good experience section")
     else:
-        feedback.append("💼 Enhance experience section with more relevant information and what you have contributed or learnt")
+        feedback.append("Enhance experience with more details")
     
-    # 7. Projects Quality
-    project_analysis = analyze_projects_quality(original_text)
-    project_score = 40  
-    
-    if project_analysis['project_count'] > 0:
-        project_score += min(20, project_analysis['project_count'] * 5)
-    if project_analysis['has_technologies']:
-        project_score += 15
-    if project_analysis['has_links']:
-        project_score += 15
-    if project_analysis['has_dates']:
-        project_score += 10
-    
-    project_score = min(100, project_score)
+    # 6. Projects
+    project_score = check_projects(original_text)
     breakdown["projects"] = project_score
     score += (project_score / 100) * WEIGHTS["projects"]
     
-    if project_score >= 80:
-        feedback.append("✅ Strong project portfolio")
+    if project_score >= 75:
+        feedback.append("Strong project portfolio")
     else:
-        improvements = []
-        if not project_analysis['has_technologies']:
-            improvements.append("technologies used")
-        if not project_analysis['has_links']:
-            improvements.append("GitHub links")
-        if not project_analysis['has_dates']:
-            improvements.append("project dates")
-        feedback.append(f"🚀 Enhance projects by adding: {', '.join(improvements)}")
+        feedback.append("Add more project details and links")
     
-    # 8. Contact Information
+    # 7. Contact Information
     contact_score = 0
     contact_found = []
-    
     for contact_type, pattern in CONTACT_PATTERNS.items():
         if re.search(pattern, original_text, re.I):
+            contact_score += 33
             contact_found.append(contact_type)
-            contact_score += 20
     
-    contact_score = min(100, contact_score)
-    breakdown["contact"] = contact_score
-    score += (contact_score / 100) * WEIGHTS["contact"]
+    breakdown["contact"] = min(100, contact_score)
+    score += (min(100, contact_score) / 100) * WEIGHTS["contact"]
     
     missing_contacts = [c for c in ['email', 'linkedin', 'github'] if c not in contact_found]
     if missing_contacts:
-        feedback.append(f"📧 Add missing contact info: {', '.join(missing_contacts)}")
-    else:
-        feedback.append("✅ Complete contact information")
+        feedback.append(f"Add missing contact: {', '.join(missing_contacts)}")
     
-    # 9. Quantification(Contribution in metrics)
-    quantification_patterns = [
-        r'\d+%', r'\d+\+', r'\d+x', r'\d+k\b', r'\d+m\b',
-        r'\$\d+', r'\d+\s*(users|customers|projects|hours)',
-        r'(improved|increased|reduced|decreased).*\d+'
-    ]
-    
-    quantified_results = []
-    for pattern in quantification_patterns:
-        matches = re.findall(pattern, original_text, re.I)
-        quantified_results.extend(matches)
-    
-    quant_score = min(100, len(quantified_results) * 15 + 40)
+    # 8. Quantified Achievements
+    quant_patterns = [r'\d+%', r'\d+\+', r'\d+x', r'\d+k\b', r'improved.*\d+', r'increased.*\d+']
+    quant_count = sum(len(re.findall(p, original_text, re.I)) for p in quant_patterns)
+    quant_score = min(100, quant_count * 15 + 40)
     breakdown["quantification"] = quant_score
     score += (quant_score / 100) * WEIGHTS["quantification"]
     
-    if quant_score >= 80:
-        feedback.append(f"📊 Good use of metrics ({len(quantified_results)} quantified results)")
+    if quant_count >= 5:
+        feedback.append(f"Good use of metrics ({quant_count} found)")
     else:
-        feedback.append("📊 Add more quantified achievements i.e percentages, numbers, your impact")
+        feedback.append("Add quantified achievements (numbers, %)")
     
-    # 10. Industry Keywords
-    keyword_count = 0
-    for keyword in INDUSTRY_KEYWORDS:
-        if re.search(r'\b' + re.escape(keyword) + r'\b', text, re.I):
-            keyword_count += 1
-    
-    keyword_score = min(100, (keyword_count / len(INDUSTRY_KEYWORDS)) * 100 + 40)
+    # 9. Industry Keywords
+    keyword_count = sum(1 for kw in INDUSTRY_KEYWORDS if re.search(r'\b' + kw + r'\b', text, re.I))
+    keyword_score = min(100, keyword_count * 12 + 40)
     breakdown["keywords"] = keyword_score
     score += (keyword_score / 100) * WEIGHTS["keywords"]
     
-    if keyword_score >= 70:
-        feedback.append(f"🔑 Good industry keyword usage ({keyword_count} are found)")
+    if keyword_count >= 4:
+        feedback.append(f"Good keyword usage ({keyword_count} found)")
     else:
-        feedback.append("🔍 Include more industry relevant keywords (agile, API, testing, etc.)")
+        feedback.append("Add industry keywords (agile, API, testing)")
     
-    # 11. Length of doc
-    word_count = len(original_text.split())
-    if 400 <= word_count <= 800:
-        length_score = 100
-    elif 300 <= word_count <= 1000:
-        length_score = 85
-    elif word_count < 300:
-        length_score = max(40, (word_count / 300) * 100)
-    else:  # if more than a 1000 words
-        length_score = max(60, 100 - ((word_count - 1000) / 20))
-    
-    breakdown["length"] = int(length_score)
-    score += (length_score / 100) * WEIGHTS["length"]
-    
-    # Final calculations
+    # Final Score Calculation
     final_score = int(round(score))
     tier = assign_tier(final_score)
     
-    # Add summary feedback at the beginning
-    summary = f"Overall Score: {final_score}/100 (Tier {tier})"
-    if final_score >= 90:
-        summary += " - Outstanding! Your resume is well made and ready."
-    elif final_score >= 80:
-        summary += " - Excellent! Minor improvements will make your resume perfect."
+    # Summary message
+    if final_score >= 85:
+        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Excellent resume!"
     elif final_score >= 70:
-        summary += " - Good foundation with room for improvement."
-    elif final_score >= 60:
-        summary += " - Decent resume, but a few improvements and changes are recommended."
+        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Good foundation"
+    elif final_score >= 50:
+        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Needs improvement"
     else:
-        summary += " - Significant improvements are needed."
+        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Significant work needed"
     
     feedback.insert(0, summary)
     return final_score, feedback, breakdown
