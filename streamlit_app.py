@@ -7,7 +7,7 @@ import time
 
 st.set_page_config(page_title="Review My Resume", layout="wide")
 
-# Load the styles.css  file
+# Load the styles.css file
 def load_css(file_name):
     try:
         with open(file_name) as f:
@@ -61,58 +61,32 @@ if st.session_state.page == "home":
         st.markdown('<div class="upload-card">', unsafe_allow_html=True)
         st.markdown("### Upload Your Resume")
         uploaded_file = st.file_uploader("Drop your resume here or choose a file", type=["pdf"], label_visibility="collapsed")
-        st.markdown('<p>PDF only. Max 2MB file size.</p>', unsafe_allow_html=True)
 
-        if uploaded_file:
-            st.session_state["resume_file"] = uploaded_file
-            if st.button("Analyze Resume"):
-                # Show full-page centered loading spinner with blur
-                loading_placeholder = st.empty()
-                with loading_placeholder.container():
-                    st.markdown("""
-                    <div style='position: fixed; top: 0; left:0; width: 100vw; height: 100vh; 
-                                display: flex; justify-content: center; align-items: center;
-                                backdrop-filter: blur(6px); background: rgba(0,0,0,0.4); z-index: 10000;'>
-                        <div style='display: flex; flex-direction: column; align-items: center; color:white;'>
-                            <div class="loader" style="border: 6px solid rgba(255,255,255,0.2); 
-                                 border-top: 6px solid #ff69b4; border-radius: 50%; 
-                                 width: 60px; height: 60px; animation: spin 1s linear infinite;"></div>
-                            <p style="font-size: 1.2rem; margin-top: 1rem;">Analyzing resume...</p>
-                        </div>
-                    </div>
-                    <style>
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                    </style>
-                    """, unsafe_allow_html=True)
+        if uploaded_file and st.button("Analyze Resume"):
+            temp_path = Path("temp_resume.pdf")
+            with open(temp_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            
+            parsed_data = parse_resume(str(temp_path))
+            final_score, feedback, breakdown = score_resume(parsed_data)
 
-                temp_path = Path("temp_resume.pdf")
-                with open(temp_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
-                
-                parsed_data = parse_resume(str(temp_path))
-                final_score, feedback, breakdown = score_resume(parsed_data)
+            # Calculate the tier of resume
+            if final_score >= 85:
+                tier = "A"
+            elif final_score >= 70:
+                tier = "B"
+            elif final_score >= 50:
+                tier = "C"
+            else:
+                tier = "D"
 
-                # ✅ Calculate the tier of resume
-                if final_score >= 85:
-                    tier = "A"
-                elif final_score >= 70:
-                    tier = "B"
-                elif final_score >= 50:
-                    tier = "C"
-                else:
-                    tier = "D"
+            st.session_state.final_score = final_score
+            st.session_state.tier = tier
+            st.session_state.breakdown = breakdown
+            st.session_state.feedback = feedback
 
-                st.session_state.final_score = final_score
-                st.session_state.tier = tier
-                st.session_state.breakdown = breakdown
-                st.session_state.feedback = feedback
-
-                loading_placeholder.empty()
-                st.session_state.page = "results"
-                st.rerun()
+            st.session_state.page = "results"
+            st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -120,30 +94,6 @@ if st.session_state.page == "home":
         resume_image_path = Path("static/Resume_Pic.jpg")
         if resume_image_path.exists():
             st.image(str(resume_image_path), use_column_width=True)
-
-    st.markdown('<h2 style="text-align:center; margin-top:3rem; color:black;">How It Works</h2>', unsafe_allow_html=True)
-    st.markdown('''
-    <div class="steps-container">
-        <div class="step">
-            <h3>📄 Extract</h3>
-            <p>Your PDF resume is scanned and parsed using NLP to extract clean text.</p>
-        </div>
-        <div class="step">
-            <h3>🧠 Analyze</h3>
-            <p>Skills and key data are extracted using rule-based NLP logic.</p>
-        </div>
-        <div class="step">
-            <h3>📊 Score</h3>
-            <p>We calculate a score based on how many strong signals your resume includes.</p>
-        </div>
-    </div>
-    <div class="steps-container" style="margin-top:1rem;">
-        <div class="step">
-            <h3>🛠️ Suggest</h3>
-            <p>Get suggestions to boost visibility, fix weak points, and increase hiring chances.</p>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
 
 elif st.session_state.page == "results":
     show_results(
