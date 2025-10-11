@@ -15,4 +15,5 @@ def show_results(final_score, tier, breakdown, feedback):
     with col2:
         st.subheader("📄Section-wise Breakdown")
         df = pd.DataFrame(list(breakdown.items()), columns=["Section", "Score"])
+        df.index = df.index + 1  # started table index with 1 
         st.table(df)  

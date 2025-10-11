@@ -10,7 +10,7 @@ WEIGHTS = {
     "experience": 14,
     "projects": 12,
     "contact": 6,
-    "quantification": 8,
+    "metrics": 8,
     "keywords": 6
 }
 
@@ -158,9 +158,9 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     breakdown["design"] = design_score
     score += design_score * WEIGHTS["design"] / 100
     if design_score > 80:
-        feedback.append("Clean, professional layout")
+        feedback.append("Clean and professional looking layout")
     else:
-        feedback.append("Improve layout and formatting")
+        feedback.append(" Can Improve layout and formatting")
     
     # 3. Required Sections
     present = []
@@ -230,17 +230,17 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     if missing_contacts:
         feedback.append(f"Add missing contact: {', '.join(missing_contacts)}")
     
-    # 8. Quantified Achievements
-    quant_patterns = [r'\d+%', r'\d+\+', r'\d+x', r'\d+k\b', r'improved.*\d+', r'increased.*\d+']
-    quant_count = sum(len(re.findall(p, original_text, re.I)) for p in quant_patterns)
-    quant_score = min(100, quant_count * 15 + 40)
-    breakdown["quantification"] = quant_score
-    score += (quant_score / 100) * WEIGHTS["quantification"]
+    # 8. Metrics in Resume
+    metric_patterns = [r'\d+%', r'\d+\+', r'\d+x', r'\d+k\b', r'improved.*\d+', r'increased.*\d+']
+    metric_count = sum(len(re.findall(p, original_text, re.I)) for p in metric_patterns)
+    metric_score = min(100, metric_count * 15 + 40)
+    breakdown["metrics"] = metric_score
+    score += (metric_score / 100) * WEIGHTS["metrics"]
     
-    if quant_count >= 5:
-        feedback.append(f"Good use of metrics ({quant_count} found)")
+    if metric_count >= 5:
+        feedback.append(f"Good use of metrics ({metric_count} found)")
     else:
-        feedback.append("Add quantified achievements (numbers, %)")
+        feedback.append("Add achievements metrics like 'x % improved' if applicable ")
     
     # 9. Industry Keywords
     keyword_count = sum(1 for kw in INDUSTRY_KEYWORDS if re.search(r'\b' + kw + r'\b', text, re.I))
@@ -259,13 +259,13 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     
     # Summary
     if final_score >= 85:
-        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Excellent resume!"
+        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Excellent resume, all sections are present and well detailed"
     elif final_score >= 70:
-        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Good foundation"
+        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Good resume, just a few areas to improve {missing}"
     elif final_score >= 50:
-        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Needs improvement"
+        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Needs improvement, some sections are missing {missing} or not detailed enough"
     else:
-        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Significant work needed"
+        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Significant improvement needed"
     
     feedback.insert(0, summary)
     return final_score, feedback, breakdown

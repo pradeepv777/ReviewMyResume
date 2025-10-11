@@ -6,7 +6,7 @@ from results import show_results
 
 st.set_page_config(page_title="Review My Resume", layout="wide")
 
-# Load the styles.css file
+# Load the styles.css file from static folder
 def load_css(file_name):
     try:
         with open(file_name) as f:
