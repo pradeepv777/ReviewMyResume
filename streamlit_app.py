@@ -6,47 +6,28 @@ from results import show_results
 
 st.set_page_config(page_title="Review My Resume", layout="wide")
 
-# Load the styles.css file from static folder
-def load_css(file_name):
-    try:
-        with open(file_name) as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-    except FileNotFoundError:
-        pass
-
-load_css("static/styles.css")
-
-# Hide Streamlit header
-st.markdown("""<style>[data-testid="stHeader"] {display: none;}</style>""", unsafe_allow_html=True)
-
+# Gradient background and hide Streamlit header
 st.markdown("""
 <style>
-.upload-card {
-    background: transparent !important;
-    backdrop-filter: none !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-div[data-testid="stFileUploader"] > div {
-    background: transparent !important;
-    border: none !important;
-}
-div[data-testid="stVerticalBlock"], 
-div[data-testid="stHorizontalBlock"] {
-    background: transparent !important;
-}
-.stContainer, .block-container {
-    background: transparent !important;
-}
-div[class*="css-"] {
-    background: transparent !important;
-}
+    .stApp {
+        background: linear-gradient(to right, #0a2259, #6f8f8f, #e8b459, #9c4f09) !important;
+        background-attachment: fixed !important;
+    }
+    [data-testid="stHeader"] {
+        display: none;
+    }
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+    footer {
+        visibility: hidden;
+        height: 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Top Bar
-st.markdown('<div class="topbar">ReviewMyResume</div>', unsafe_allow_html=True)
-st.markdown('<div class="content">', unsafe_allow_html=True)
+st.title("ReviewMyResume")
 
 if "page" not in st.session_state:
     st.session_state.page = "home"
@@ -54,12 +35,11 @@ if "page" not in st.session_state:
 if st.session_state.page == "home":
     left, right = st.columns([1, 1])
     with left:
-        st.markdown("<h1 style='font-size: 2.8rem; font-weight: bold;'>Is your resume good enough?</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 1.2rem; line-height: 1.6;'>A free and fast resume reviewer to check and ensure your resume is ready for the job market.</p>", unsafe_allow_html=True)
+        st.header("Is your resume good enough?")
+        st.write("A free and fast resume reviewer to check and ensure your resume is ready for the job market.")
 
-        st.markdown('<div class="upload-card">', unsafe_allow_html=True)
-        st.markdown("### Upload Your Resume")
-        uploaded_file = st.file_uploader("Drop your resume here or choose a file", type=["pdf"], label_visibility="collapsed")
+        st.subheader("Upload Your Resume")
+        uploaded_file = st.file_uploader("Drop your resume here or choose a file", type=["pdf"])
 
         if uploaded_file and st.button("Analyze Resume"):
             temp_path = Path("temp_resume.pdf")
@@ -78,8 +58,6 @@ if st.session_state.page == "home":
             st.session_state.page = "results"
             st.rerun()
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
     with right:
         resume_image_path = Path("static/Resume_Pic.jpg")
         if resume_image_path.exists():
@@ -95,6 +73,3 @@ elif st.session_state.page == "results":
     if st.button("Analyze Another Resume"):
         st.session_state.page = "home"
         st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer">© Review My Resume</div>', unsafe_allow_html=True)

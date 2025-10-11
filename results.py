@@ -10,7 +10,7 @@ def show_results(final_score, tier, breakdown, feedback):
     with col1:
         st.subheader("🔎Suggestions & Feedback")
         for f in feedback:
-            st.markdown(f"- {f}")
+            st.write(f"- {f}")
 
     with col2:
         st.subheader("📄Section-wise Breakdown")

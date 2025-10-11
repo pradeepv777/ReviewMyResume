@@ -21,7 +21,7 @@ def extract_PdfText(pdf_path: str) -> str:
         print("Error reading PDF:", e)
     return text
 
-def _heuristic_ats_score(text: str) -> int:
+def heuristic_atsScore(text: str) -> int:
     # we start at 100, deduct for potential ATS issues
     raw = text
     if not raw:
@@ -61,7 +61,7 @@ def design_score(text: str) -> int:
 
 def parse_resume(filepath: str) -> Dict:
     text = extract_PdfText(filepath)
-    ats_parse_rate = _heuristic_ats_score(text)
+    ats_parse_rate = heuristic_atsScore(text)
     design_score_value = design_score(text)
 
     return {
