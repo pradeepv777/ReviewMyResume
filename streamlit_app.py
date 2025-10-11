@@ -25,7 +25,7 @@ st.markdown("""
         height: 0;
     }
     h1 {
-        color: #FFFFFF!important;
+        color: #60E682 !important;
     }
 </style>
 """, unsafe_allow_html=True)
