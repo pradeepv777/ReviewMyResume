@@ -10,7 +10,7 @@ def extract_PdfText(pdf_path: str) -> str:
                 
                 page_text = page.extract_text() or ""
                 text += page_text + "\n"
-            # Section for links
+            # Section for links if there
             for page in pdf.pages:
                 if page.annots:
                     for annot in page.annots:
@@ -51,7 +51,7 @@ def design_score(text: str) -> int:
     if re.search(r'https?://\S{60,}', text):
         score -= 10
     
-    if re.search(r'\n\s*\n\s*\n', text):
+    if re.search(r'\n\s*\n\s*\n', text):  # multiple new lines(blank lines)
         score -= 5
     
     long_line = any(len(line) > 140 for line in text.splitlines())
