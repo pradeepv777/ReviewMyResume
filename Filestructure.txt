@@ -1,7 +1,7 @@
 resume_reviewer_streamlit/
 ├── static/
 │   ├── Resume_Pic.jpg
-│   └── styles.css
+│   
 ├── .gitignore
 ├── parser.py
 ├── README.md
