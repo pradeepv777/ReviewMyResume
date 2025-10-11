@@ -2,7 +2,7 @@ import pdfplumber
 import re
 from typing import Dict
 
-def extract_text_from_pdf(pdf_path: str) -> str:
+def extract_PdfText(pdf_path: str) -> str:
     text = ""
     try:
         with pdfplumber.open(pdf_path) as pdf:
@@ -41,7 +41,7 @@ def _heuristic_ats_score(text: str) -> int:
         score -= 20
     return max(40, min(100, score))
 
-def _heuristic_design_score(text: str) -> int:
+def design_score(text: str) -> int:
     
     score = 70
     
@@ -60,12 +60,12 @@ def _heuristic_design_score(text: str) -> int:
     return max(40, min(100, score))
 
 def parse_resume(filepath: str) -> Dict:
-    text = extract_text_from_pdf(filepath)
+    text = extract_PdfText(filepath)
     ats_parse_rate = _heuristic_ats_score(text)
-    design_score = _heuristic_design_score(text)
+    design_score_value = design_score(text)
 
     return {
         "raw_text": text.lower(),
         "ats_parse_rate": ats_parse_rate,
-        "design_score": design_score
+        "design_score": design_score_value
     }

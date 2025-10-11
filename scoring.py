@@ -86,7 +86,7 @@ def check_experience(text: str) -> int:
 def check_projects(text: str) -> int:
     score = 30
     
-    # Count project bullets
+    # Count project points
     project_count = len(re.findall(r'(^|\n)\s*[•\-\*]\s+', text))
     score += min(25, project_count * 8)
     
@@ -98,7 +98,7 @@ def check_projects(text: str) -> int:
     if re.search(r'(using|built with|technologies|stack)', text, re.I):
         score += 15
     
-    # Check for project dates
+    # Check for project dates(if exists)
     if re.search(r'\b\d{4}\b', text):
         score += 10
     
@@ -257,7 +257,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     final_score = int(round(score))
     tier = assign_tier(final_score)
     
-    # Summary message
+    # Summary
     if final_score >= 85:
         summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Excellent resume!"
     elif final_score >= 70:
