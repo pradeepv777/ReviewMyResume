@@ -24,10 +24,14 @@ st.markdown("""
         visibility: hidden;
         height: 0;
     }
+    h1 {
+        color: #00D9FF !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("ReviewMyResume")
+
 
 if "page" not in st.session_state:
     st.session_state.page = "home"
