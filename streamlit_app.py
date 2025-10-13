@@ -4,13 +4,13 @@ from parser import parse_resume
 from scoring import score_resume, assign_tier
 from results import show_results
 
-st.set_page_config(page_title="Review My Resume", layout="wide")
+st.set_page_config(page_title="Review My Resume", layout="wide", theme="light")
 
 # Gradient background and hide Streamlit header
 st.markdown("""
 <style>
     .stApp {
-        background: linear-gradient(to right, #DDD0C8, #FFFFFF) !important;
+        background: #FFFFFF !important;
         background-attachment: fixed !important;
     }
     [data-testid="stHeader"] {
