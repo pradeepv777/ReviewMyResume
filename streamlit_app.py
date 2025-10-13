@@ -24,6 +24,9 @@ st.markdown("""
         visibility: hidden;
         height: 0;
     }
+    [data-testid="stAppDeployButton"] {
+        display: none !important;
+    }
     h1 {
         color: #D3C3B9 !important;
     }
