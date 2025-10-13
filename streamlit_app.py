@@ -4,7 +4,7 @@ from parser import parse_resume
 from scoring import score_resume, assign_tier
 from results import show_results
 
-st.set_page_config(page_title="Review My Resume", layout="wide", theme="light")
+st.set_page_config(page_title="Review My Resume", layout="wide")
 
 # Gradient background and hide Streamlit header
 st.markdown("""
