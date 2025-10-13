@@ -10,7 +10,7 @@ st.set_page_config(page_title="Review My Resume", layout="wide")
 st.markdown("""
 <style>
     .stApp {
-        background: linear-gradient(to right, #0a2259, #6f8f8f, #e8b459, #9c4f09) !important;
+        background: linear-gradient(to right, #DDD0C8, #FFFFFF) !important;
         background-attachment: fixed !important;
     }
     [data-testid="stHeader"] {

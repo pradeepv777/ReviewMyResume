@@ -137,7 +137,7 @@ def check_ats(text: str) -> Tuple[int, List[str]]:
         score -= 8
         feedback.append("Add clear section headers")
     
-    return max(40, score), feedback
+    return min(100, max(40, score)), feedback
 
 def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     text = parsed_data.get("raw_text", "").lower()
@@ -261,7 +261,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     if final_score >= 85:
         summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Excellent resume, all sections are present and well detailed"
     elif final_score >= 70:
-        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Good resume, just a few areas to improve {missing}"
+        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Good resume, just a few areas to improve"
     elif final_score >= 50:
         summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Needs improvement, some sections are missing {missing} or not detailed enough"
     else:
