@@ -133,8 +133,8 @@ def check_ats(text: str) -> Tuple[int, List[str]]:
         feedback.append("Too many special characters")
     
     # Section headers check
-    headers = len(re.findall(r'^\s*[A-Z][A-Za-z\s&]+\s*$', text, re.M))
-    if headers < 3:
+    headers = len(re.findall(r'^\s*[A-Za-z][A-Za-z\s.&:-]*\s*$', text, re.M))
+    if headers < 5:
         score -= 8
         feedback.append("Add clear section headers")
     
