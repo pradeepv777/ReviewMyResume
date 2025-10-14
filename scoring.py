@@ -158,7 +158,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     design_score = int(parsed_data.get("design_score", 70))
     breakdown["design"] = design_score # design_score calculated in parser.py
     score += design_score * WEIGHTS["design"] / 100
-    if design_score > 80:
+    if design_score >= 80:
         feedback.append("Clean and professional looking layout")
     else:
         feedback.append(" Can Improve layout and formatting")
