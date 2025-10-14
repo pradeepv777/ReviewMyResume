@@ -231,7 +231,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     if missing_contacts:
         feedback.append(f"Add missing contact: {', '.join(missing_contacts)}")
     if contact_found:
-        feedback.append(f"Contacts detected: {','.join(contact_found)}")
+        feedback.append(f"Contacts detected: {', '.join(contact_found)}")
     
     # 8. Metrics in Resume
     metric_patterns = [r'\d+%', r'\d+\+', r'\d+x',r'improved.*\d+', r'increased.*\d+']
