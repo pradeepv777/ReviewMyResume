@@ -42,7 +42,8 @@ ACTION_VERBS = [
 CONTACT_PATTERNS = {
     "email": r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
     "linkedin": r"linkedin\.com\/in\/[\w\-]+",
-    "github": r"github\.com\/[\w\-]+"
+    "github": r"github\.com\/[\w\-]+",
+    "phone": r"\b\d{10}\b"
 }
 
 def assign_tier(score: int) -> str:
@@ -150,12 +151,12 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     # 1. ATS Compatibility
     ats_score, ats_feedback = check_ats(original_text)
     breakdown["ats"] = ats_score
-    score += ats_score * WEIGHTS["ats"] / 100
+    score += ats_score * WEIGHTS["ats"] / 100 # weightage of ats key specified at start of this file
     feedback.extend(ats_feedback)
     
     # 2. Design & Layout
     design_score = int(parsed_data.get("design_score", 70))
-    breakdown["design"] = design_score
+    breakdown["design"] = design_score # design_score calculated in parser.py
     score += design_score * WEIGHTS["design"] / 100
     if design_score > 80:
         feedback.append("Clean and professional looking layout")
@@ -178,11 +179,11 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     if missing:
         feedback.append(f"Missing sections: {', '.join(missing)}")
     else:
-        feedback.append("All essential sections present")
+        feedback.append("All essential sections are present")
     
     # 4. Technical Skills
-    skill_count = count_skills(original_text)
-    skill_score = min(100, skill_count * 8 + 30)
+    skill_count = count_skills(original_text) # call count_skills function at line 56
+    skill_score = min(100, skill_count * 8 + 30) # base score 30 and for each skill +8 is added
     breakdown["skills"] = skill_score
     score += (skill_score / 100) * WEIGHTS["skills"]
     
@@ -194,7 +195,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
         feedback.append(f"Add more technical skills ({skill_count} found)")
     
     # 5. Work Experience
-    exp_score = check_experience(original_text)
+    exp_score = check_experience(original_text) # call check_experience function at line 66
     breakdown["experience"] = exp_score
     score += (exp_score / 100) * WEIGHTS["experience"]
     
@@ -206,7 +207,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
         feedback.append("Enhance experience with more details")
     
     # 6. Projects
-    project_score = check_projects(original_text)
+    project_score = check_projects(original_text) # call check_projects function at line 76
     breakdown["projects"] = project_score
     score += (project_score / 100) * WEIGHTS["projects"]
     
@@ -220,18 +221,20 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     contact_found = []
     for contact_type, pattern in CONTACT_PATTERNS.items():
         if re.search(pattern, original_text, re.I):
-            contact_score += 33
+            contact_score += 25
             contact_found.append(contact_type)
     
     breakdown["contact"] = min(100, contact_score)
     score += (min(100, contact_score) / 100) * WEIGHTS["contact"]
     
-    missing_contacts = [c for c in ['email', 'linkedin', 'github'] if c not in contact_found]
+    missing_contacts = [c for c in ['email', 'linkedin', 'github', 'phone'] if c not in contact_found]
     if missing_contacts:
         feedback.append(f"Add missing contact: {', '.join(missing_contacts)}")
+    if contact_found:
+        feedback.append(f"Contacts detected: {','.join(contact_found)}")
     
     # 8. Metrics in Resume
-    metric_patterns = [r'\d+%', r'\d+\+', r'\d+x', r'\d+k\b', r'improved.*\d+', r'increased.*\d+']
+    metric_patterns = [r'\d+%', r'\d+\+', r'\d+x',r'improved.*\d+', r'increased.*\d+']
     metric_count = sum(len(re.findall(p, original_text, re.I)) for p in metric_patterns)
     metric_score = min(100, metric_count * 15 + 40)
     breakdown["metrics"] = metric_score
@@ -240,10 +243,10 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     if metric_count >= 5:
         feedback.append(f"Good use of metrics ({metric_count} found)")
     else:
-        feedback.append("Add achievements metrics like 'x % improved' if applicable ")
+        feedback.append("Add achievements metrics like 'x % improved, x+ years of experience, improved accuracy by 10%' if applicable ")
     
     # 9. Industry Keywords
-    keyword_count = sum(1 for kw in INDUSTRY_KEYWORDS if re.search(r'\b' + kw + r'\b', text, re.I))
+    keyword_count = sum(1 for key in INDUSTRY_KEYWORDS if re.search(r'\b' + key + r'\b', text, re.I))# \b to prevent patial matches
     keyword_score = min(100, keyword_count * 12 + 40)
     breakdown["keywords"] = keyword_score
     score += (keyword_score / 100) * WEIGHTS["keywords"]
@@ -251,11 +254,11 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     if keyword_count >= 4:
         feedback.append(f"Good keyword usage ({keyword_count} found)")
     else:
-        feedback.append("Add industry keywords (agile, API, testing)")
+        feedback.append("Add industry keywords like agile, API, testing,tested,etc")
     
     # Final Score Calculation
     final_score = int(round(score))
-    tier = assign_tier(final_score)
+    tier = assign_tier(final_score)# assign_tier func at line 51
     
     # Summary
     if final_score >= 85:
@@ -268,4 +271,5 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
         summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Significant improvement needed"
     
     feedback.insert(0, summary)
+    # return 3 values final_score(int), feedback(list), breakdown(dict)
     return final_score, feedback, breakdown
