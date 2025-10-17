@@ -6,11 +6,11 @@ from results import show_results
 
 st.set_page_config(page_title="Review My Resume", layout="wide")
 
-# Gradient background and hide Streamlit header
+# css for app styling
 st.markdown("""
 <style>
     .stApp {
-        background: linear-gradient(to right, #10232A) !important;
+        background-color: #10232A !important; #important is used to overide streamlits default colors
         background-attachment: fixed !important;
     }
     [data-testid="stHeader"] {
@@ -21,7 +21,7 @@ st.markdown("""
         padding-bottom: 1rem !important;
     }
     footer {
-        visibility: hidden;
+        visibility: hidden; # hide footer (made by streamlit)
         height: 0;
     }
     [data-testid="stAppDeployButton"] {

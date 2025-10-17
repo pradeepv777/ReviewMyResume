@@ -1,11 +1,12 @@
-resume_reviewer_streamlit/
-├── static/
-│   ├── Resume_Pic.jpg
-│   
-├── .gitignore
-├── parser.py
-├── README.md
-├── requirements.txt
-├── results.py
-├── scoring.py
-└── streamlit_app.py
+ReviewMyResume/
+|- static/
+    |-Resume_Pic.jpg
+|
+|   
+|- gitignore
+|- README.md
+|- requirements.txt
+|- parser.py  # files for app
+|- results.py
+|- scoring.py
+|- streamlit_app.py
