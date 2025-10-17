@@ -12,15 +12,17 @@ st.markdown("""
     .stApp {
         background-color: #10232A;
     }
+    /* hide the header in app */
+    [data-testid="stHeader"] {
+        display: none;
+    }
+    /* remove space on top and bottom */
     .block-container {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
+        padding-top: 12px;
+        padding-bottom: 30px;
     }
+    /* hiding the footer in app */
     footer {
-        visibility: hidden;
-        height: 0;
-    }
-    [data-testid="stAppDeployButton"] {
         display: none;
     }
     h1 {
