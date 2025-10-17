@@ -65,7 +65,8 @@ def parse_resume(filepath: str) -> Dict:
     design_score_value = design_score(text)
 
     return {
-        "raw_text": text.lower(),
+        "raw_text": text,
+        "raw_text_lower": text.lower(),
         "ats_parse_rate": ats_parse_rate,
         "design_score": design_score_value
     }

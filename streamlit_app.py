@@ -45,18 +45,22 @@ if st.session_state.page == "home":
             temp_path = Path("temp_resume.pdf")
             with open(temp_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
-            
-            parsed_data = parse_resume(str(temp_path))
-            final_score, feedback, breakdown = score_resume(parsed_data)
-            tier = assign_tier(final_score)
 
-            st.session_state.final_score = final_score
-            st.session_state.tier = tier
-            st.session_state.breakdown = breakdown
-            st.session_state.feedback = feedback
+            try:
+                parsed_data = parse_resume(str(temp_path))
+                final_score, feedback, breakdown = score_resume(parsed_data)
+                tier = assign_tier(final_score)
 
-            st.session_state.page = "results"
-            st.rerun()
+                st.session_state.final_score = final_score
+                st.session_state.tier = tier
+                st.session_state.breakdown = breakdown
+                st.session_state.feedback = feedback
+
+                st.session_state.page = "results"
+                st.rerun()
+            finally:
+                if temp_path.exists():
+                    temp_path.unlink()
 
     with right:
         resume_image_path = Path("static/Resume_Pic.jpg")

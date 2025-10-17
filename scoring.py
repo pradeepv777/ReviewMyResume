@@ -123,7 +123,7 @@ def check_ats(text: str) -> Tuple[int, List[str]]:
     if bullet_count < 5:
         score -= 15
         feedback.append("Add more bullet points")
-    elif bullet_count > 3:
+    elif bullet_count > 8:
         score += 5
     
     # Special characters check
@@ -141,7 +141,7 @@ def check_ats(text: str) -> Tuple[int, List[str]]:
     return min(100, max(40, score)), feedback
 
 def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
-    text = parsed_data.get("raw_text", "").lower()
+    text_lower = parsed_data.get("raw_text_lower", "")
     original_text = parsed_data.get("raw_text", "")
     
     score = 0.0
@@ -167,7 +167,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     present = []
     missing = []
     for section, synonyms in SECTION_SYNONYMS.items():
-        if any(re.search(r"\b" + re.escape(syn) + r"\b", text) for syn in synonyms):
+        if any(re.search(r"\b" + re.escape(syn) + r"\b", text_lower) for syn in synonyms):
             present.append(section)
         else:
             missing.append(section)
@@ -246,7 +246,7 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
         feedback.append("Add achievements metrics like 'x % improved, x+ years of experience, improved accuracy by 10%' if applicable ")
     
     # 9. Industry Keywords
-    keyword_count = sum(1 for key in INDUSTRY_KEYWORDS if re.search(r'\b' + key + r'\b', text, re.I))# \b to prevent patial matches
+    keyword_count = sum(1 for key in INDUSTRY_KEYWORDS if re.search(r'\b' + re.escape(key) + r'\b', text_lower, re.I))# \b to prevent partial matches
     keyword_score = min(100, keyword_count * 12 + 40)
     breakdown["keywords"] = keyword_score
     score += (keyword_score / 100) * WEIGHTS["keywords"]
@@ -266,7 +266,8 @@ def score_resume(parsed_data: Dict) -> Tuple[int, List[str], Dict]:
     elif final_score >= 70:
         summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Good resume, just a few areas to improve"
     elif final_score >= 50:
-        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Needs improvement, some sections are missing {missing} or not detailed enough"
+        missing_summary = ', '.join(missing) if missing else 'some sections'
+        summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Needs improvement, some sections are missing {missing_summary} or not detailed enough"
     else:
         summary = f"Overall Score: {final_score}/100 (Tier {tier}) - Significant improvement needed"
     
