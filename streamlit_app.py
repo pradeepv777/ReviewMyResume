@@ -21,20 +21,15 @@ st.markdown("""
         padding-top: 12px;
         padding-bottom: 30px;
     }
-    /* hiding the footer in app */
-    footer {
-        display: none;
-    }
     h1 {
         color: #D3C3B9;
     }
 </style>
-""", unsafe_allow_html=True)
+""", unsafe_allow_html=True) # run as html file we use this 
 
 st.title("ReviewMyResume")
 
-
-if "page" not in st.session_state:
+if "page" not in st.session_state: # page tracks the current page of the app
     st.session_state.page = "home"
 
 if st.session_state.page == "home":
