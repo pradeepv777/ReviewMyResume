@@ -4,17 +4,13 @@ from parser import parse_resume
 from scoring import score_resume, assign_tier
 from results import show_results
 
-st.set_page_config(page_title="Review My Resume", layout="wide")
+st.set_page_config(page_title="ReviewMyResume",layout="wide")
 
 # css for app styling
 st.markdown("""
 <style>
     .stApp {
         background-color: #10232A;
-        background-attachment: fixed;
-    }
-    [data-testid="stHeader"] {
-        display: none;
     }
     .block-container {
         padding-top: 1rem;
