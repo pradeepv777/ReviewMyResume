@@ -10,25 +10,25 @@ st.set_page_config(page_title="Review My Resume", layout="wide")
 st.markdown("""
 <style>
     .stApp {
-        background-color: #10232A !important; #important is used to overide streamlits default colors
-        background-attachment: fixed !important;
+        background-color: #10232A;
+        background-attachment: fixed;
     }
     [data-testid="stHeader"] {
         display: none;
     }
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 1rem !important;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
     footer {
-        visibility: hidden; # hide footer (made by streamlit)
+        visibility: hidden;
         height: 0;
     }
     [data-testid="stAppDeployButton"] {
-        display: none !important;
+        display: none;
     }
     h1 {
-        color: #D3C3B9 !important;
+        color: #D3C3B9;
     }
 </style>
 """, unsafe_allow_html=True)
