@@ -33,21 +33,22 @@ if "page" not in st.session_state: # page tracks the current page of the app
     st.session_state.page = "home"
 
 if st.session_state.page == "home":
-    left, right = st.columns([1, 1])
+    left, right = st.columns([1, 1]) # make two columns equal size
     with left:
         st.header("Is your resume good enough?")
         st.write("A free and fast resume reviewer to check and ensure your resume is ready for the job market.")
 
-        st.subheader("Upload Your Resume")
+        st.subheader(" Upload Your Resume")
         uploaded_file = st.file_uploader("Drop your resume here or choose a file", type=["pdf"])
 
         if uploaded_file and st.button("Analyze Resume"):
-            temp_path = Path("temp_resume.pdf")
+            temp_path = Path("temporaryResume.pdf")
             with open(temp_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
 
             try:
                 parsed_data = parse_resume(str(temp_path))
+
                 final_score, feedback, breakdown = score_resume(parsed_data)
                 tier = assign_tier(final_score)
 
@@ -65,7 +66,8 @@ if st.session_state.page == "home":
     with right:
         resume_image_path = Path("static/Resume_Pic.jpg")
         if resume_image_path.exists():
-            st.image(str(resume_image_path), use_column_width=True)
+            st.image(str(resume_image_path), use_column_width=True) # for resize
+            # used str since .img expects string path
 
 elif st.session_state.page == "results":
     show_results(
