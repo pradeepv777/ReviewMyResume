@@ -1,0 +1,19 @@
+name: Keep Streamlit Alive
+
+on:
+  schedule:
+    # Runs every 6 hours (at minute 0 past every 6th hour)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit App
+        run: |
+          # Replace the URL below with your actual Streamlit deployment URL
+          # or set STREAMLIT_APP_URL in GitHub Repository Secrets
+          APP_URL="${{ secrets.STREAMLIT_APP_URL || 'https://reviewmyresume.streamlit.app' }}"
+          echo "Pinging $APP_URL..."
+          curl -s -L -m 30 "$APP_URL" > /dev/null && echo "App pinged successfully!" || echo "Ping failed (or timed out)"
